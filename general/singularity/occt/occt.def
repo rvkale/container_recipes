@@ -1,0 +1,47 @@
+BootStrap: localimage
+From: pre.sif
+
+%files
+7.4.0    /opt
+
+%post
+export OCCT_VER_MAJOR=7
+export OCCT_VER_MINOR=4
+export OCCT_VER_BRANCH=0
+cd /opt && \
+curl -L -o occt.tgz "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V${OCCT_VER_MAJOR}_${OCCT_VER_MINOR}_${OCCT_VER_BRANCH};sf=tgz"
+tar xf /opt/occt.tgz && \
+mkdir -p /opt/occt-V${OCCT_VER_MAJOR}_${OCCT_VER_MINOR}_${OCCT_VER_BRANCH}/build_static && \
+cd /opt/occt-V${OCCT_VER_MAJOR}_${OCCT_VER_MINOR}_${OCCT_VER_BRANCH}/build_static && \
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_MODULE_Draw=0 \
+  -DBUILD_MODULE_Visualization=0 \
+  -DBUILD_MODULE_ApplicationFramework=0 \
+  -DCMAKE_PREFIX_PATH=${FREETYPE_ROOT} \
+  -DCMAKE_INSTALL_PREFIX=/usr/local/occt/${OCCT_VER_MAJOR}.${OCCT_VER_MINOR}.${OCCT_VER_BRANCH} \
+  -DBUILD_LIBRARY_TYPE=Static \
+  .. && \
+make -j$(nproc) && \
+make install && \
+mkdir -p /opt/occt-V${OCCT_VER_MAJOR}_${OCCT_VER_MINOR}_${OCCT_VER_BRANCH}/build_shared && \
+cd /opt/occt-V${OCCT_VER_MAJOR}_${OCCT_VER_MINOR}_${OCCT_VER_BRANCH}/build_shared && \
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_MODULE_Draw=0 \
+  -DBUILD_MODULE_Visualization=0 \
+  -DBUILD_MODULE_ApplicationFramework=0 \
+  -DCMAKE_PREFIX_PATH=${FREETYPE_ROOT} \
+  -DCMAKE_INSTALL_PREFIX=/usr/local/occt/${OCCT_VER_MAJOR}.${OCCT_VER_MINOR}.${OCCT_VER_BRANCH} \
+  .. && \
+make -j$(nproc) && \
+make install && \
+cd /opt && \
+mkdir -p /usr/local/modulefiles/dev/occt && \
+cd /usr/local/modulefiles/dev/occt && \
+mv /opt/${OCCT_VER_MAJOR}.${OCCT_VER_MINOR}.${OCCT_VER_BRANCH} \
+  /usr/local/modulefiles/dev/occt/. && \
+echo "#%Module" > .version && \
+echo set ModulesVersion "${OCCT_VER_MAJOR}.${OCCT_VER_MINOR}.${OCCT_VER_BRANCH}" >> .version
+rm -rf \
+  /opt/occt*
